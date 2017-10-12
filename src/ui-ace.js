@@ -62,6 +62,11 @@ angular.module('ui.ace', [])
         acee.setShowPrintMargin(opts.showPrintMargin);
       }
 
+      // add passing in placeholder text
+      if (angular.isDefined(opts.placeholder)){
+        acee.placeholderText = opts.placeholder;
+      }
+
       // commands
       if (angular.isDefined(opts.disableSearch) && opts.disableSearch) {
         acee.commands.addCommands([
@@ -279,6 +284,12 @@ angular.module('ui.ace', [])
           if (current === previous) return;
           opts = angular.extend({}, options, scope.$eval(attrs.uiAce));
 
+          if(attrs.placeholder){
+            opts = angular.extend(opts, {
+              'placeholder': attrs.placeholder
+            });
+          }
+
           opts.callbacks = [ opts.onLoad ];
           if (opts.onLoad !== options.onLoad) {
             // also call the global onLoad handler
@@ -306,6 +317,27 @@ angular.module('ui.ace', [])
         };
 
         scope.$watch(attrs.uiAce, updateOptions, /* deep watch */ true);
+
+        scope.$watch(function(){
+          return acee.session.getValue();
+        }, function(newValue, oldValue){
+          if(typeof newValue !== 'string') {
+            return;
+          }
+
+          var showPlaceholder = !newValue.length;
+          var node = acee.renderer.placeholderMessageNode;
+          if(!showPlaceholder && node){
+            acee.renderer.scroller.removeChild(acee.renderer.placeholderMessageNode);
+            acee.renderer.placeholderMessageNode = null;
+          } else if (showPlaceholder && !node){
+            node = acee.renderer.placeholderMessageNode = document.createElement("div");
+            node.textContent = acee.placeholderText;
+            node.className = "ace_invisible ace_emptyMessage";
+            node.setAttribute('style', "padding: 0 9px; white-space: pre-wrap");
+            acee.renderer.scroller.appendChild(node);
+          }
+        });
 
         // set the options here, even if we try to watch later, if this
         // line is missing things go wrong (and the tests will also fail)
