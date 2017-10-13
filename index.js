@@ -1,3 +1,3 @@
-require('src/ui-ace');
+require('./src/ui-ace');
 
 module.exports = 'ui.ace';
